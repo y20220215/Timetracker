@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Minimalist Time Tracker</title>
+<style>
+    /* --- CSS 스타일 --- */
+    :root {
+        --text-color-primary: #37352f; /* 노션 기본 짙은 회색 */
+        --text-color-secondary: #9b9a97; /* 노션 연한 회색 */
+        --bg-hover: #f1f0f0; /* 버튼 호버 시 아주 연한 회색 */
+        --border-color: #e0e0e0;
+    }
+
+    body {
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+        background-color: transparent; /* 노션 배경에 녹아들도록 투명 */
+        margin: 0;
+        padding: 16px;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        height: 100vh;
+        box-sizing: border-box;
+    }
+
+    .tracker-container {
+        background: #ffffff;
+        padding: 20px 24px;
+        border-radius: 8px;
+        /* 아주 미세한 테두리로 영역 구분, 원치 않으면 border: none; 으로 변경 */
+        border: 1px solid var(--border-color);
+        text-align: center;
+        width: 100%;
+        max-width: 300px;
+    }
+
+    /* 작업 입력 필드 */
+    #task-input {
+        width: 100%;
+        border: none;
+        border-bottom: 1px solid var(--border-color);
+        padding: 8px 0;
+        margin-bottom: 16px;
+        font-size: 14px;
+        color: var(--text-color-primary);
+        text-align: center;
+        outline: none;
+        background: transparent;
+    }
+    #task-input::placeholder {
+        color: var(--text-color-secondary);
+    }
+    #task-input:focus {
+        border-bottom: 1px solid var(--text-color-primary);
+    }
+
+    /* 시간 표시 영역 */
+    #timer-display {
+        font-size: 48px;
+        font-weight: 600;
+        color: var(--text-color-primary);
+        margin-bottom: 20px;
+        font-variant-numeric: tabular-nums; /* 숫자가 움직여도 너비 고정 */
+        letter-spacing: -1px;
+    }
+    /* 타이머 작동 중일 때 약간의 강조 (선택 사항) */
+    .running #timer-display {
+        color: #000000;
+    }
+
+    /* 컨트롤 버튼 영역 */
+    .controls {
+        display: flex;
+        justify-content: center;
+        gap: 16px;
+        margin-top: 12px;
+    }
+
+    .btn {
+        background: transparent;
+        border: 1px solid var(--border-color);
+        cursor: pointer;
+        padding: 10px;
+        border-radius: 50%; /* 동그란 버튼 */
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: var(--text-color-primary);
+        transition: all 0.2s ease;
+    }
+
+    .btn:hover {
+        background-color: var(--bg-hover);
+        border-color: var(--text-color-secondary);
+    }
+    
+    .btn:active {
+        background-color: #e0e0e0;
+    }
+
+    /* 아이콘 SVG 스타일 */
+    .btn svg {
+        width: 20px;
+        height: 20px;
+        fill: currentColor; /* 버튼 텍스트 색상을 따라감 */
+    }
+
+    /* 버튼 표시/숨김 처리 */
+    #start-btn, #pause-btn {
+        display: none; /* 초기엔 둘 다 숨김 */
+    }
+    
+    /* 초기 상태: 시작 버튼만 표시 */
+    .stopped #start-btn { display: flex; }
+    /* 실행 상태: 일시정지 버튼만 표시 */
+    .running #pause-btn { display: flex; }
+    /* 일시정지 상태: 시작 버튼만 표시 */
+    .paused #start-btn { display: flex; }
+
+</style>
+</head>
+<body>
+
+<div class="tracker-container stopped" id="tracker-app">
+    <input type="text" id="task-input" placeholder="What are you working on?">
+    
+    <div id="timer-display">00:00:00</div>
+    
+    <div class="controls">
+        <button class="btn" id="start-btn" title="Start">
+            <svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
+        </button>
+        
+        <button class="btn" id="pause-btn" title="Pause">
+            <svg viewBox="0 0 24 24"><path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/></svg>
+        </button>
+        
+        <button class="btn" id="reset-btn" title="Reset">
+            <svg viewBox="0 0 24 24"><path d="M6 6h12v12H6z"/></svg>
+        </button>
+    </div>
+</div>
+
+<script>
+    // --- JavaScript 로직 ---
+    let startTime;
+    let elapsedTime = 0;
+    let timerInterval;
+    let isRunning = false;
+
+    const timerDisplay = document.getElementById('timer-display');
+    const startBtn = document.getElementById('start-btn');
+    const pauseBtn = document.getElementById('pause-btn');
+    const resetBtn = document.getElementById('reset-btn');
+    const appContainer = document.getElementById('tracker-app');
+
+    // 시간을 00:00:00 형식으로 변환하는 함수
+    function formatTime(timeInSeconds) {
+        const hours = Math.floor(timeInSeconds / 3600);
+        const minutes = Math.floor((timeInSeconds % 3600) / 60);
+        const seconds = timeInSeconds % 60;
+
+        return `${pad(hours)}:${pad(minutes)}:${pad(seconds)}`;
+    }
+
+    // 숫자를 두 자리로 맞춰주는 함수 (예: 5 -> 05)
+    function pad(number) {
+        return number < 10 ? '0' + number : number;
+    }
+
+    // 화면 업데이트 함수
+    function updateDisplay() {
+        const now = Date.now();
+        const timePassed = Math.floor((now - startTime) / 1000);
+        timerDisplay.textContent = formatTime(elapsedTime + timePassed);
+    }
+
+    // 상태에 따른 클래스 변경 (버튼 표시/숨김용)
+    function setAppState(state) {
+        appContainer.classList.remove('stopped', 'running', 'paused');
+        appContainer.classList.add(state);
+    }
+
+    // 시작 함수
+    function startTimer() {
+        if (!isRunning) {
+            isRunning = true;
+            startTime = Date.now();
+            timerInterval = setInterval(updateDisplay, 1000);
+            setAppState('running');
+        }
+    }
+
+    // 일시정지 함수
+    function pauseTimer() {
+        if (isRunning) {
+            isRunning = false;
+            clearInterval(timerInterval);
+            elapsedTime += Math.floor((Date.now() - startTime) / 1000);
+            setAppState('paused');
+        }
+    }
+
+    // 리셋 함수
+    function resetTimer() {
+        isRunning = false;
+        clearInterval(timerInterval);
+        elapsedTime = 0;
+        timerDisplay.textContent = "00:00:00";
+        document.getElementById('task-input').value = ""; // 입력 필드도 초기화
+        setAppState('stopped');
+    }
+
+    // 이벤트 리스너 연결
+    startBtn.addEventListener('click', startTimer);
+    pauseBtn.addEventListener('click', pauseTimer);
+    resetBtn.addEventListener('click', resetTimer);
+
+    // 초기 상태 설정
+    setAppState('stopped');
+
+</script>
+</body>
+</html>
