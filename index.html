@@ -109,30 +109,6 @@
       text-overflow: ellipsis;
     }
 
-    .project-selector-mini {
-      padding: 4px 8px;
-      background: #f5f5f5;
-      border: 1px solid #e5e5e5;
-      border-radius: 6px;
-      cursor: pointer;
-      font-size: 10px;
-      color: #737373;
-      transition: all 0.2s ease;
-      white-space: nowrap;
-      display: flex;
-      align-items: center;
-      gap: 4px;
-    }
-
-    .project-selector-mini:hover {
-      background: #e5e5e5;
-      border-color: #d4d4d4;
-    }
-
-    .project-selector-mini-icon {
-      font-size: 9px;
-    }
-
     .project-actions {
       display: flex;
       gap: 4px;
@@ -226,19 +202,31 @@
 
     .navigation {
       display: flex;
-      justify-content: space-between;
+      justify-content: center;
       align-items: center;
       margin-top: 12px;
       padding-top: 12px;
       border-top: 1px solid #f0f0f0;
+      position: relative;
+    }
+
+    .nav-bar {
+      display: flex;
+      align-items: center;
+      background: #fafafa;
+      border: 1px solid #e5e5e5;
+      border-radius: 8px;
+      padding: 4px;
+      gap: 4px;
+      width: 100%;
     }
 
     .nav-btn {
       width: 28px;
       height: 28px;
-      border: 2px solid #e5e5e5;
-      background: #fafafa;
-      border-radius: 7px;
+      border: none;
+      background: transparent;
+      border-radius: 6px;
       cursor: pointer;
       display: flex;
       align-items: center;
@@ -249,8 +237,7 @@
     }
 
     .nav-btn:hover:not(:disabled) {
-      background: #f0f0f0;
-      border-color: #d4d4d4;
+      background: #e5e5e5;
       color: #262626;
     }
 
@@ -259,23 +246,32 @@
       cursor: not-allowed;
     }
 
-    .add-project-btn {
-      padding: 6px 14px;
-      border: 2px dashed #d4d4d4;
+    .nav-selector {
+      flex: 1;
+      padding: 6px 10px;
       background: transparent;
-      border-radius: 7px;
+      border: none;
+      border-radius: 6px;
       cursor: pointer;
-      font-size: 10px;
+      font-size: 11px;
       font-weight: 600;
-      color: #737373;
+      color: #262626;
+      text-align: center;
       transition: all 0.2s ease;
-      letter-spacing: 0.3px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 4px;
+      white-space: nowrap;
     }
 
-    .add-project-btn:hover {
-      border-color: #a3a3a3;
-      color: #525252;
-      background: #fafafa;
+    .nav-selector:hover {
+      background: #f0f0f0;
+    }
+
+    .nav-selector-icon {
+      font-size: 9px;
+      color: #737373;
     }
 
     .modal-overlay {
@@ -388,35 +384,23 @@
     }
 
     .project-dropdown {
-      position: absolute;
-      top: 100%;
-      left: 0;
-      right: 0;
+      position: fixed;
       background: #ffffff;
       border-radius: 12px;
       box-shadow: 0 8px 32px rgba(0, 0, 0, 0.15);
-      margin-top: 4px;
       padding: 6px;
-      max-height: 200px;
+      max-height: 240px;
       overflow-y: auto;
       z-index: 100;
       display: none;
+      min-width: 200px;
+      opacity: 0;
+      transition: opacity 0.2s ease;
     }
 
     .project-dropdown.active {
       display: block;
-      animation: dropdownSlideIn 0.2s ease;
-    }
-
-    @keyframes dropdownSlideIn {
-      from {
-        opacity: 0;
-        transform: translateY(-8px);
-      }
-      to {
-        opacity: 1;
-        transform: translateY(0);
-      }
+      opacity: 1;
     }
 
     .project-dropdown-item {
@@ -427,6 +411,7 @@
       display: flex;
       align-items: center;
       justify-content: space-between;
+      gap: 12px;
     }
 
     .project-dropdown-item:hover {
@@ -442,6 +427,10 @@
       font-size: 13px;
       font-weight: 500;
       color: inherit;
+      flex: 1;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
     }
 
     .project-dropdown-time {
@@ -452,6 +441,34 @@
 
     .project-dropdown-item.active .project-dropdown-time {
       color: #d4d4d4;
+    }
+
+    .project-dropdown-divider {
+      height: 1px;
+      background: #f0f0f0;
+      margin: 4px 0;
+    }
+
+    .project-dropdown-add {
+      padding: 10px 12px;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 13px;
+      font-weight: 600;
+      color: #525252;
+    }
+
+    .project-dropdown-add:hover {
+      background: #f5f5f5;
+    }
+
+    .project-dropdown-add-icon {
+      font-size: 14px;
+      color: #737373;
     }
 
     .empty-state {
@@ -513,9 +530,14 @@
     <div id="projectCardContainer"></div>
 
     <div class="navigation">
-      <button class="nav-btn" id="prevBtn" disabled>◀</button>
-      <button class="add-project-btn" id="addProjectBtn">+ New Project</button>
-      <button class="nav-btn" id="nextBtn" disabled>▶</button>
+      <div class="nav-bar">
+        <button class="nav-btn" id="prevBtn" disabled>◀</button>
+        <button class="nav-selector" id="navSelector">
+          <span id="navSelectorText">Projects</span>
+          <span class="nav-selector-icon">▼</span>
+        </button>
+        <button class="nav-btn" id="nextBtn" disabled>▶</button>
+      </div>
     </div>
   </div>
 
@@ -640,6 +662,7 @@
 
     function renderProjectCard() {
       const container = document.getElementById('projectCardContainer');
+      const navSelectorText = document.getElementById('navSelectorText');
       const prevBtn = document.getElementById('prevBtn');
       const nextBtn = document.getElementById('nextBtn');
 
@@ -650,12 +673,14 @@
             <div class="empty-state-text">Start tracking your time by creating a project</div>
           </div>
         `;
+        navSelectorText.textContent = 'New Project';
         prevBtn.disabled = true;
         nextBtn.disabled = true;
         return;
       }
 
       const project = state.projects[state.currentIndex];
+      navSelectorText.textContent = `${state.currentIndex + 1} / ${state.projects.length}`;
 
       prevBtn.disabled = state.currentIndex === 0;
       nextBtn.disabled = state.currentIndex === state.projects.length - 1;
@@ -667,7 +692,6 @@
           <div class="project-header">
             <div class="project-title-area">
               <div class="project-title">${project.name}</div>
-              ${state.projects.length > 1 ? '<button class="project-selector-mini" onclick="toggleDropdown(event)"><span>Switch</span><span class="project-selector-mini-icon">▼</span></button>' : ''}
             </div>
             <div class="project-actions">
               <button class="icon-btn reset" onclick="resetTimer()" title="Reset time">↻</button>
@@ -702,36 +726,71 @@
       const dropdown = document.getElementById('projectDropdown');
       
       if (state.projects.length === 0) {
-        dropdown.innerHTML = '<div style="padding: 16px; text-align: center; color: #a3a3a3; font-size: 14px;">No projects available</div>';
+        dropdown.innerHTML = `
+          <div class="project-dropdown-add" onclick="addProject(); toggleNavDropdown(event);">
+            <span class="project-dropdown-add-icon">+</span>
+            <span>New Project</span>
+          </div>
+        `;
         return;
       }
 
-      dropdown.innerHTML = state.projects.map((project, index) => `
+      const projectItems = state.projects.map((project, index) => `
         <div class="project-dropdown-item ${index === state.currentIndex ? 'active' : ''}" onclick="selectProject(${index})">
           <div class="project-dropdown-name">${project.name}</div>
           <div class="project-dropdown-time">${formatTime(project.totalTime)}</div>
         </div>
       `).join('');
+
+      dropdown.innerHTML = `
+        ${projectItems}
+        <div class="project-dropdown-divider"></div>
+        <div class="project-dropdown-add" onclick="addProject(); toggleNavDropdown(event);">
+          <span class="project-dropdown-add-icon">+</span>
+          <span>New Project</span>
+        </div>
+      `;
     }
 
-    function toggleDropdown(event) {
+    function toggleNavDropdown(event) {
       event.stopPropagation();
       const dropdown = document.getElementById('projectDropdown');
-      const button = event.currentTarget;
-      const rect = button.getBoundingClientRect();
+      const button = document.getElementById('navSelector');
       
       state.dropdownOpen = !state.dropdownOpen;
       
       if (state.dropdownOpen) {
-        dropdown.style.position = 'fixed';
-        dropdown.style.top = `${rect.bottom + 4}px`;
-        dropdown.style.left = `${rect.left}px`;
-        dropdown.style.width = '200px';
-        dropdown.classList.add('active');
+        // 먼저 렌더링
         renderDropdown();
+        
+        // 드롭다운을 표시하고 높이를 측정
+        dropdown.style.display = 'block';
+        dropdown.style.opacity = '0';
+        const dropdownHeight = dropdown.offsetHeight;
+        
+        // 위치 계산
+        const rect = button.getBoundingClientRect();
+        dropdown.style.position = 'fixed';
+        dropdown.style.bottom = `${window.innerHeight - rect.top + 4}px`;
+        dropdown.style.left = `${rect.left}px`;
+        dropdown.style.width = `${rect.width}px`;
+        dropdown.style.top = 'auto';
+        dropdown.style.transform = 'none';
+        
+        // 애니메이션을 위해 약간의 지연 후 표시
+        requestAnimationFrame(() => {
+          dropdown.classList.add('active');
+        });
       } else {
         dropdown.classList.remove('active');
+        setTimeout(() => {
+          dropdown.style.display = 'none';
+        }, 200);
       }
+    }
+
+    function toggleDropdown(event) {
+      toggleNavDropdown(event);
     }
 
     function selectProject(index) {
@@ -889,7 +948,7 @@
       renderProjectCard();
     }
 
-    document.getElementById('addProjectBtn').addEventListener('click', addProject);
+    document.getElementById('navSelector').addEventListener('click', toggleNavDropdown);
     document.getElementById('prevBtn').addEventListener('click', () => navigateProjects('prev'));
     document.getElementById('nextBtn').addEventListener('click', () => navigateProjects('next'));
     
@@ -901,7 +960,8 @@
 
     document.addEventListener('click', (e) => {
       const dropdown = document.getElementById('projectDropdown');
-      if (state.dropdownOpen && !dropdown.contains(e.target) && !e.target.closest('.project-selector-mini')) {
+      const navSelector = document.getElementById('navSelector');
+      if (state.dropdownOpen && !dropdown.contains(e.target) && !navSelector.contains(e.target)) {
         state.dropdownOpen = false;
         dropdown.classList.remove('active');
       }
